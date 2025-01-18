@@ -1,0 +1,108 @@
+Advanced // Project Description: Advanced Full-Stack Project Management Tool
+// Unique Features: 
+// 1. Task Evolution Timeline: Tasks evolve based on AI predictions, adjusting their priority and deadlines dynamically.
+// 2. Multi-View Dashboards: Visualize project data using mind maps, Gantt charts, and a 3D workspace.
+// 3. Intelligent Resource Allocation: AI analyzes team skills and project requirements to allocate tasks effectively.
+// 4. Secure Live Collaboration: End-to-end encrypted real-time collaboration for global teams.
+// 5. Feedback Loop Integration: Automated feedback loop collection post-task completion for process improvement.
+// 6. Predictive Budgeting: AI-driven cost prediction and alerts for budget overruns.
+
+// Frontend (React + Next.js + Materialize CSS + TypeScript)
+// File: frontend/src/pages/index.tsx
+
+import React, { useState, useEffect } from 'react';
+import Head from 'next/head';
+import styles from '../styles/Home.module.css';
+import TaskDashboard from '../components/TaskDashboard';
+
+const Home: React.FC = () => {
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    async function fetchTasks() {
+      const response = await fetch('/api/tasks');
+      const data = await response.json();
+      setTasks(data);
+    }
+
+    fetchTasks();
+  }, []);
+
+  return (
+    <div className={styles.container}>
+      <Head>
+        <title>Project Management Tool</title>
+      </Head>
+
+      <main className={styles.main}>
+        <h1 className={styles.title}>Welcome to Your AI-Driven Project Dashboard</h1>
+        <TaskDashboard tasks={tasks} />
+      </main>
+    </div>
+  );
+};
+
+export default Home;
+
+// Backend (Node.js + Express.js + MongoDB)
+// File: backend/server.js
+
+const express = require('express');
+const mongoose = require('mongoose');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const { Task } = require('./models/task');
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// MongoDB Connection
+mongoose.connect('mongodb://localhost:27017/projectManagementDB', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+// API Endpoints
+app.get('/api/tasks', async (req, res) => {
+  try {
+    const tasks = await Task.find();
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: 'Error fetching tasks' });
+  }
+});
+
+app.post('/api/tasks', async (req, res) => {
+  const { title, description, priority } = req.body;
+  try {
+    const newTask = new Task({ title, description, priority });
+    await newTask.save();
+    res.status(201).json(newTask);
+  } catch (err) {
+    res.status(400).json({ error: 'Error creating task' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(Server is running on port ${PORT});
+});
+
+// MongoDB Schema
+// File: backend/models/task.js
+
+const mongoose = require('mongoose');
+
+const taskSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  description: { type: String },
+  priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
+  createdAt: { type: Date, default: Date.now },
+});
+
+const Task = mongoose.model('Task', taskSchema);
+
+module.exports = { Task }; 
